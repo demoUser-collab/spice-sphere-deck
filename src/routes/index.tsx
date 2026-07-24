@@ -20,8 +20,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Recipe Hub — Cook something worth remembering" },
       { name: "description", content: "Discover recipes that actually work. Beautiful, fast, and made for weeknights." },
-      { property: "og:title", content: "Recipe Hub" },
-      { property: "og:description", content: "Discover recipes that actually work." },
+      { property: "og:title", content: "Recipe Hub — Cook something worth remembering" },
+      { property: "og:description", content: "Discover recipes that actually work. Beautiful, fast, and made for weeknights." },
     ],
   }),
   component: HomePage,
