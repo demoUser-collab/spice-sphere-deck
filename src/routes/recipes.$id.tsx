@@ -48,7 +48,7 @@ export const Route = createFileRoute("/recipes/$id")({
 });
 
 function RecipeDetail() {
-  const { recipe } = Route.useLoaderData();
+  const { recipe } = Route.useLoaderData() as { recipe: Recipe };
   const { data: reviews = [] } = useQuery({ queryKey: ["reviews", recipe.id], queryFn: () => listReviewsFor(recipe.id) });
   const { data: allRecipes = [] } = useQuery({ queryKey: ["recipes"], queryFn: listRecipes });
 
