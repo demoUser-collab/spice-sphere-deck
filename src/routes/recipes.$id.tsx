@@ -16,9 +16,10 @@ import { formatMinutes } from "@/utils/format";
 import { useAppStore } from "@/store";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { Recipe } from "@/types";
 
 export const Route = createFileRoute("/recipes/$id")({
-  loader: async ({ params }) => {
+  loader: async ({ params }): Promise<{ recipe: Recipe }> => {
     const recipe = await getRecipe(params.id);
     if (!recipe) throw notFound();
     return { recipe };
