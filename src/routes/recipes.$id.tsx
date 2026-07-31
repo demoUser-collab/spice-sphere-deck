@@ -213,28 +213,17 @@ function RecipeDetail() {
           <Tabs defaultValue="steps" className="mt-8">
             <TabsList className="rounded-full">
               <TabsTrigger value="steps">Steps</TabsTrigger>
+              <TabsTrigger value="guide">Chef's guide</TabsTrigger>
               <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
               <TabsTrigger value="reviews">Reviews ({recipe.reviewCount})</TabsTrigger>
             </TabsList>
             <TabsContent value="steps" className="mt-6">
-              <ol className="space-y-4">
-                {recipe.steps.map((s) => (
-                  <li key={s.id} className="glass flex gap-4 rounded-3xl p-5">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-warm font-display text-white">
-                      {s.order}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-foreground/90">{s.text}</p>
-                      {s.durationMin != null && (
-                        <div className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" /> {s.durationMin} min
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              <StepList steps={recipe.steps} />
             </TabsContent>
+            <TabsContent value="guide" className="mt-6">
+              <ChefGuide recipe={recipe} />
+            </TabsContent>
+
             <TabsContent value="nutrition" className="mt-6">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {Object.entries(recipe.nutrition).map(([k, v]) => (
