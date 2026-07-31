@@ -1,4 +1,6 @@
 import type { Recipe, Category, Chef, Collection, AppNotification, Review, User } from "@/types";
+import { buildSteps, buildExtras, profileFor } from "./recipe-content";
+
 
 const img = (seed: string, w = 1200, h = 800) =>
   `https://images.unsplash.com/photo-${seed}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
@@ -62,6 +64,19 @@ const RECIPE_SEEDS: Array<Partial<Recipe> & { title: string; cuisine: string; ca
   { title: "Coconut Dal Tadka", cuisine: "Indian", category: "Vegetarian", mealType: "Dinner", difficulty: "Easy", imgIdx: 6 },
 ];
 
+const INGREDIENT_SETS: Record<string, string[]> = {
+  pasta: ["Spaghetti", "Parmesan", "Black pepper", "Olive oil", "Garlic", "Butter", "Kosher salt", "Flat-leaf parsley"],
+  noodleSoup: ["Ramen noodles", "Chicken stock", "White miso", "Ginger", "Garlic", "Scallions", "Soft-boiled egg", "Sesame oil"],
+  griddle: ["Plain flour", "Buttermilk", "Eggs", "Baking powder", "Caster sugar", "Butter", "Vanilla extract", "Blueberries"],
+  sear: ["Ribeye steak", "Kosher salt", "Black pepper", "Grapeseed oil", "Butter", "Garlic", "Thyme", "Lemon"],
+  bake: ["Plain flour", "Unsalted butter", "Caster sugar", "Eggs", "Dark chocolate", "Baking powder", "Sea salt", "Double cream"],
+  raw: ["Baby gem lettuce", "Cucumber", "Cherry tomatoes", "Avocado", "Feta", "Toasted almonds", "Olive oil", "Lemon"],
+  pizza: ["00 flour", "Water", "Fresh yeast", "Sea salt", "San Marzano tomatoes", "Fresh mozzarella", "Basil", "Olive oil"],
+  simmer: ["Red lentils", "Coconut milk", "Onion", "Garlic", "Ginger", "Cumin seeds", "Turmeric", "Fresh coriander"],
+  roast: ["Chicken thighs", "Baby potatoes", "Red onion", "Olive oil", "Smoked paprika", "Garlic", "Rosemary", "Lemon"],
+  sushi: ["Sushi rice", "Rice vinegar", "Sushi-grade salmon", "Nori", "Wasabi", "Soy sauce", "Pickled ginger", "Sesame seeds"],
+};
+
 function makeIngredients(names: string[]): Recipe["ingredients"] {
   return names.map((n, i) => ({
     id: `i${i}`,
@@ -71,38 +86,35 @@ function makeIngredients(names: string[]): Recipe["ingredients"] {
   }));
 }
 
-function makeSteps(count: number): Recipe["steps"] {
-  const templates = [
-    "Prep and measure everything before you start.",
-    "Bring the pan to medium-high and add the fat.",
-    "Sauté aromatics until fragrant, about 2 minutes.",
-    "Add the main component and season generously.",
-    "Reduce heat, cover, and let it develop flavor.",
-    "Finish with acid and fresh herbs off the heat.",
-    "Plate, garnish, and serve immediately.",
-  ];
-  return Array.from({ length: count }, (_, i) => ({
-    id: `s${i}`,
-    order: i + 1,
-    text: templates[i % templates.length],
-    durationMin: [5, 10, 3, 12, 8, 4, 2][i % 7],
-  }));
-}
+/** Variant prefixes let the 16 curated seeds expand into a realistic catalogue. */
+const VARIANTS = [
+  "", "Weeknight ", "Family-Style ", "One-Pan ", "Slow-Cooked ", "Extra-Crispy ",
+  "Garlic-Butter ", "Spicy ", "Summer ", "Winter ", "Chef's ", "Rustic ",
+];
 
-export const RECIPES: Recipe[] = RECIPE_SEEDS.map((seed, i) => {
+const TAG_POOL = ["Weeknight", "Comfort", "Crowd-pleaser", "Make-ahead", "High-protein", "Budget", "One-pan", "Freezer-friendly", "Kid-friendly", "Date night"];
+const SEASONS = ["Spring", "Summer", "Autumn", "Winter"] as const;
+
+const EXPANDED = VARIANTS.flatMap((prefix, vi) =>
+  RECIPE_SEEDS.map((seed) => ({ ...seed, title: `${prefix}${seed.title}`, vi }))
+);
+
+export const RECIPES: Recipe[] = EXPANDED.map((seed, i) => {
   const prep = 10 + (i % 5) * 3;
   const cook = 15 + (i % 6) * 5;
   const image = img(IMGS[seed.imgIdx]);
+  const profile = profileFor(seed);
+  const extras = buildExtras(seed);
   return {
     id: `r${i + 1}`,
     slug: seed.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     title: seed.title,
     description:
-      "A crowd-pleaser built around real technique and pantry staples. Balanced, weeknight-friendly, and endlessly adaptable.",
+      `A ${seed.difficulty.toLowerCase()} ${seed.cuisine} ${seed.category.toLowerCase()} recipe written for first-time cooks: every step explains what to look for, what to smell for, and what to avoid.`,
     image,
     gallery: [image, img(IMGS[(seed.imgIdx + 1) % IMGS.length]), img(IMGS[(seed.imgIdx + 3) % IMGS.length])],
     author: CHEFS[i % CHEFS.length],
-    rating: 4.2 + ((i * 7) % 8) / 10,
+    rating: Number((4.0 + ((i * 7) % 10) / 10).toFixed(1)),
     reviewCount: 40 + ((i * 13) % 400),
     prepTime: prep,
     cookTime: cook,
@@ -112,25 +124,24 @@ export const RECIPES: Recipe[] = RECIPE_SEEDS.map((seed, i) => {
     cuisine: seed.cuisine,
     category: seed.category,
     mealType: seed.mealType,
-    tags: ["Weeknight", "Comfort", "Crowd-pleaser", "Make-ahead"].slice(0, 2 + (i % 3)),
-    ingredients: makeIngredients([
-      "Olive oil", "Garlic", "Onion", "Kosher salt", "Black pepper",
-      "Fresh herbs", "Lemon", "Butter",
-    ]),
-    steps: makeSteps(5 + (i % 3)),
+    tags: [SEASONS[i % 4], ...TAG_POOL.slice(i % 6, (i % 6) + 3)],
+    ingredients: makeIngredients(INGREDIENT_SETS[profile]),
+    steps: buildSteps(seed),
     nutrition: {
-      calories: 320 + (i * 27) % 400,
+      calories: 320 + ((i * 27) % 400),
       protein: 12 + (i % 20),
       carbs: 30 + (i % 40),
       fat: 8 + (i % 15),
       fiber: 3 + (i % 6),
       sugar: 2 + (i % 10),
     },
-    featured: i < 4,
-    trending: i % 3 === 0,
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
+    featured: i < 8,
+    trending: i % 7 === 0,
+    createdAt: new Date(Date.now() - i * 43200000).toISOString(),
+    ...extras,
   };
 });
+
 
 export const COLLECTIONS: Collection[] = [
   { id: "col1", name: "30-Minute Wonders", description: "Fast, from-scratch dinners.", cover: img(IMGS[3]), recipeIds: RECIPES.slice(0, 6).map(r => r.id) },
