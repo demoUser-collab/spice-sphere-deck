@@ -324,3 +324,167 @@ function CookingTimer() {
     </div>
   );
 }
+
+/** Expandable, beginner-friendly steps with a cooking progress tracker. */
+function StepList({ steps }: { steps: Recipe["steps"] }) {
+  const [done, setDone] = useState<Set<string>>(new Set());
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const pct = Math.round((done.size / steps.length) * 100);
+
+  const toggle = (set: Set<string>, id: string, fn: (s: Set<string>) => void) => {
+    const next = new Set(set);
+    next.has(id) ? next.delete(id) : next.add(id);
+    fn(next);
+  };
+
+  return (
+    <div>
+      <div className="glass mb-5 rounded-3xl p-5">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium">Cooking progress</span>
+          <span className="text-muted-foreground">{done.size} of {steps.length} steps · {pct}%</span>
+        </div>
+        <div
+          className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Cooking progress"
+        >
+          <div className="h-full rounded-full bg-gradient-to-r from-brand to-warm transition-all" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+
+      <ol className="space-y-4">
+        {steps.map((s) => {
+          const isDone = done.has(s.id);
+          const isOpen = open.has(s.id);
+          return (
+            <li key={s.id} className={cn("glass rounded-3xl p-5 transition", isDone && "opacity-70")}>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => toggle(done, s.id, setDone)}
+                  aria-pressed={isDone}
+                  aria-label={`Mark step ${s.order} as ${isDone ? "not done" : "done"}`}
+                  className={cn(
+                    "grid h-10 w-10 shrink-0 place-items-center rounded-full font-display text-white transition",
+                    isDone ? "bg-herb" : "bg-gradient-to-br from-brand to-warm"
+                  )}
+                >
+                  {isDone ? <Check className="h-5 w-5" /> : s.order}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-foreground/90", isDone && "line-through")}>{s.text}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    {s.durationMin != null && (
+                      <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden /> {s.durationMin} min</span>
+                    )}
+                    {(s.why || s.cue || s.mistake || s.tip) && (
+                      <button
+                        onClick={() => toggle(open, s.id, setOpen)}
+                        aria-expanded={isOpen}
+                        className="inline-flex items-center gap-1 text-brand underline-offset-2 hover:underline"
+                      >
+                        <ChevronDown className={cn("h-3.5 w-3.5 transition", isOpen && "rotate-180")} aria-hidden />
+                        {isOpen ? "Hide guidance" : "Why & what to look for"}
+                      </button>
+                    )}
+                  </div>
+
+                  {isOpen && (
+                    <div className="mt-4 grid gap-3 text-sm">
+                      {s.why && <Note icon={Info} label="Why" text={s.why} />}
+                      {s.cue && <Note icon={Eye} label="Look & smell for" text={s.cue} />}
+                      {s.mistake && <Note icon={AlertTriangle} label="Common mistake" text={s.mistake} tone="warn" />}
+                      {s.tip && <Note icon={Lightbulb} label="Tip" text={s.tip} tone="good" />}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function Note({ icon: Icon, label, text, tone }: { icon: typeof Info; label: string; text: string; tone?: "warn" | "good" }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/60 p-3">
+      <div className={cn(
+        "mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest",
+        tone === "warn" ? "text-destructive" : tone === "good" ? "text-herb" : "text-muted-foreground"
+      )}>
+        <Icon className="h-3.5 w-3.5" aria-hidden /> {label}
+      </div>
+      <p className="text-foreground/85">{text}</p>
+    </div>
+  );
+}
+
+/** Tips, substitutions, storage, pairings, allergens — all mock-data driven. */
+function ChefGuide({ recipe }: { recipe: Recipe }) {
+  return (
+    <div className="grid gap-4">
+      {recipe.chefNotes && (
+        <section className="glass rounded-3xl p-5">
+          <h3 className="font-display text-xl">Chef's notes</h3>
+          <p className="mt-2 text-sm text-foreground/85">{recipe.chefNotes}</p>
+        </section>
+      )}
+      {recipe.tips?.length ? (
+        <section className="glass rounded-3xl p-5">
+          <h3 className="font-display text-xl">Cooking tips</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-foreground/85">
+            {recipe.tips.map((t) => <li key={t}>{t}</li>)}
+          </ul>
+        </section>
+      ) : null}
+      {recipe.equipment?.length ? (
+        <section className="glass rounded-3xl p-5">
+          <h3 className="font-display text-xl">Preparation checklist</h3>
+          <ul className="mt-2 grid gap-1 text-sm text-foreground/85 sm:grid-cols-2">
+            {recipe.equipment.map((e) => (
+              <li key={e} className="inline-flex items-center gap-2"><Check className="h-3.5 w-3.5 text-herb" aria-hidden /> {e}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {recipe.substitutions?.length ? (
+        <section className="glass rounded-3xl p-5">
+          <h3 className="font-display text-xl">Ingredient substitutions</h3>
+          <ul className="mt-2 space-y-1 text-sm text-foreground/85">
+            {recipe.substitutions.map((s) => (
+              <li key={s.from}><span className="font-medium">{s.from}</span> → {s.to}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {recipe.storage && <InfoCard title="Storage" text={recipe.storage} />}
+        {recipe.reheating && <InfoCard title="Reheating" text={recipe.reheating} />}
+        {recipe.serving && <InfoCard title="Serving suggestions" text={recipe.serving} />}
+        {recipe.pairings?.length ? <InfoCard title="Pairs well with" text={recipe.pairings.join(" · ")} /> : null}
+      </div>
+      <section className="glass rounded-3xl p-5">
+        <h3 className="font-display text-xl">Allergy information</h3>
+        <p className="mt-2 text-sm text-foreground/85">
+          {recipe.allergens?.length
+            ? `Contains or may contain: ${recipe.allergens.join(", ")}. Always check individual product labels.`
+            : "No common allergens flagged. Always check individual product labels."}
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function InfoCard({ title, text }: { title: string; text: string }) {
+  return (
+    <section className="glass rounded-3xl p-5">
+      <h3 className="font-display text-xl">{title}</h3>
+      <p className="mt-2 text-sm text-foreground/85">{text}</p>
+    </section>
+  );
+}
