@@ -81,6 +81,17 @@ export interface Recipe {
   featured?: boolean;
   trending?: boolean;
   createdAt: string;
+  /** Beginner-coaching content (mock-generated, backend-replaceable). */
+  tips?: string[];
+  chefNotes?: string;
+  substitutions?: Substitution[];
+  storage?: string;
+  reheating?: string;
+  serving?: string;
+  pairings?: string[];
+  allergens?: string[];
+  equipment?: string[];
+
 }
 
 export interface Category {
