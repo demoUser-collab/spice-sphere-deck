@@ -1,4 +1,6 @@
 import type { Recipe, Category, Chef, Collection, AppNotification, Review, User } from "@/types";
+import { buildSteps, buildExtras, profileFor } from "./recipe-content";
+
 
 const img = (seed: string, w = 1200, h = 800) =>
   `https://images.unsplash.com/photo-${seed}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
