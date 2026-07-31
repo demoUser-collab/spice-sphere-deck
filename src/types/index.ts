@@ -14,7 +14,21 @@ export interface Step {
   order: number;
   text: string;
   durationMin?: number;
+  /** Why this step matters — shown in the expandable coaching panel. */
+  why?: string;
+  /** Visual / aroma cue that tells you the step is done. */
+  cue?: string;
+  /** Common beginner mistake at this step. */
+  mistake?: string;
+  /** Tip to avoid that mistake, or an optional variation. */
+  tip?: string;
 }
+
+export interface Substitution {
+  from: string;
+  to: string;
+}
+
 
 export interface Nutrition {
   calories: number;
