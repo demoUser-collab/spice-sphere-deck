@@ -5,7 +5,9 @@ import { motion } from "motion/react";
 import {
   Clock, Users, Flame, Star, Heart, Bookmark, Share2, Printer,
   ChefHat, Play, Pause, RotateCcw, Minus, Plus,
+  Check, ChevronDown, Info, Eye, AlertTriangle, Lightbulb,
 } from "lucide-react";
+
 import { getRecipe, listReviewsFor, listRecipes } from "@/services/recipes.service";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
